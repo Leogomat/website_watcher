@@ -1,7 +1,8 @@
-import requests
 from bs4 import BeautifulSoup
-import time
+import webbrowser
 import win32api
+import requests
+import time
 
 URL = "https://www.sz.rwth-aachen.de/cms/SZ/Fremdsprachen/Termine/~iphr/Einstufungstests/"
 TAG = "p"
@@ -19,7 +20,8 @@ if __name__ == "__main__":
         
         # Check if text has changed
         if (not last == text and not last == None):
-            win32api.MessageBox(0, MESSAGE, "Alert", 0x00001000) 
+            win32api.MessageBox(0, MESSAGE, "Alert", 0x00001000)
+            webbrowser.open(URL, 2)
             break
         else:
             print("No changes detected")
