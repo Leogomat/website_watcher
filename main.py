@@ -2,30 +2,41 @@ from bs4 import BeautifulSoup
 import webbrowser
 import win32api
 import requests
+import json
 import time
 
-URL = "https://www.sz.rwth-aachen.de/cms/SZ/Fremdsprachen/Termine/~iphr/Einstufungstests/"
-TAG = "p"
-CLASS = "update"
-DELAY = 1800
-MESSAGE = "Change in website detected. Go register."
+URL_PATH = "urls.json"
+DELAY = 300
+MESSAGE = "Change in website detected."
 
 if __name__ == "__main__":
-    last = None
-    while(True):
-        # Fetch desired text from html document
-        r = requests.get(URL)
-        soup = BeautifulSoup(r.content, "html.parser")
-        text = soup.find(TAG, {"class": CLASS}).text
+    with open(URL_PATH, "r") as file:
+        urls = json.load(file)
+    last = {}
+    for url in urls.keys():
+        last[url] = None
+
+    try:
+        while(True):
+            for url in urls.keys():
+                # Fetch desired text from html document
+                r = requests.get(urls[url])
+                soup = BeautifulSoup(r.content, "html.parser")
+                text = soup.prettify()
+
+                # Check if text has changed
+                if (not last[url] == text and not last[url] == None):
+                    win32api.MessageBox(0, MESSAGE, "Alert", 0x00001000)
+                    webbrowser.open(urls[url], 2)
+                else:
+                    t = time.localtime()
+                    cur_time = time.strftime("%H:%M:%S ", t)
+                    print(cur_time + "No changes detected")
         
-        # Check if text has changed
-        if (not last == text and not last == None):
-            win32api.MessageBox(0, MESSAGE, "Alert", 0x00001000)
-            webbrowser.open(URL, 2)
-            break
-        else:
-            print("No changes detected")
-            
-        # Update last text seen and wait
-        last = text
-        time.sleep(DELAY)
+                # Update last text seen
+                last[url] = text
+
+            time.sleep(DELAY)
+
+    finally:
+        win32api.MessageBox(0, "The script has stopped", "Alert", 0x00001000)
